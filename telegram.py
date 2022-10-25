@@ -14,7 +14,7 @@ from telebot import types
 from telegram_bot.models import *
 
 # API Keys
-API_KEY = '5546573583:AAHh0Z8q7NCXGrievNTu9ptVAiZBLKyoAZ4'
+API_KEY = 'Your API_Key'
 
 bot = telebot.TeleBot(API_KEY)
 
