@@ -1,3 +1,4 @@
+# Import Main Django Files
 import django
 import os
 import json
@@ -7,16 +8,19 @@ import re
 os.environ['DJANGO_SETTINGS_MODULE'] = 'telebot_project.settings'
 django.setup()
 
-
+# Import Telebot
 import telebot
+from telebot import types
 from telegram_bot.models import *
 
+# API Keys
 API_KEY = '5546573583:AAHh0Z8q7NCXGrievNTu9ptVAiZBLKyoAZ4'
 
 bot = telebot.TeleBot(API_KEY)
-# Create your models here.
+
 
 class mainAppInfo:
+    # Process and Datas
   def __init__(self, RegProccess, step, FIRST_NAME, LAST_NAME, MOBILE_NUM, EDU_TEXT, FIELD_TEXT, PLACE_TEXT):
     self.RegProccess = RegProccess
     self.step = step
@@ -27,6 +31,7 @@ class mainAppInfo:
     self.FIELD_TEXT = FIELD_TEXT
     self.PLACE_TEXT = PLACE_TEXT
 
+# The Apps Dictionary For the Datas
 class app_dic:
     def __init__(self, 
         hello_m, 
@@ -55,7 +60,7 @@ class app_dic:
         self.last_m = last_m
 
 
-
+# Main Variables for the Info
 appInfo = mainAppInfo(
 False,
 0,
@@ -67,20 +72,53 @@ False,
 ''
 )
 
+# Text of Steps
 app_dic_txt = app_dic(
     'مراحل رو بابت ثبت نام شروع کنید',
     'لطفا اطلاعات خود را بابت کد تخفیف وارد نمایید',
-    'لطفا نام خود را وارد نمایید',
-    'لطفا نام خانوادگی خود را وارد نمایید',
-    'لطفا شماره تماس خود را وارد نمایید',
+    '👤 لطفا نام خود را ارسال کنید:',
+    '👤 لطفا نام خانوادگی خود را ارسال کنید:',
+    '🔰 لطفا شماره موبایل خود را از طریق دکمه زیر ارسال کنید:',
     'لطفا شماره تماس خود را با فرمت 09121111111 وارد نمایید',
     'لطفا شماره تماس خود را درست وارد نمایید',
-    'لطفا میزان تحصیلات خود را وارد نمایید',
-    'لطفا رشته تحصیلی خود را وارد نمایید',
-    'لطفا آدرس خود را وارد نمایید',
+    '🧩 لطفا مقطع تحصیلی خود را انتخاب کنید:',
+    '👨🏻‍🏫 لطفا رشته تحصیلی خود را انتخاب کنید:',
+    '🔰 لطفا شهر محل سکونت خود را وارد کنید:',
     'با موفقیت ثبت شد',
     'اطلاعات شما به صورت کامل ثبت شد، خیلی ممنونم',
 )
+
+edu_list = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5'
+]
+
+field_list = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5'
+]
+
+keyboard_edu = types.ReplyKeyboardMarkup(one_time_keyboard= True)
+keyboard_edu.add(
+    'دوازدهم',
+    'یازدهم',
+    'دهم', 
+    row_width=3)
+
+
+keyboard_field = types.ReplyKeyboardMarkup(one_time_keyboard= True)
+keyboard_field.add(
+    'ریاضی',
+    'انسانی',
+    'تجربی',
+    row_width=3)
+
 
 
 def check_phone_number(phoneNumbers):
@@ -97,6 +135,7 @@ def register_user(message):
 def check_text(message):
     if (appInfo.RegProccess):
         if(appInfo.step == 0):
+            telebot.types.ReplyKeyboardRemove()
             appInfo.FIRST_NAME = message.json['text']
             appInfo.step += 1
         if(appInfo.step == 1):
@@ -105,27 +144,29 @@ def check_text(message):
             appInfo.LAST_NAME = message.json['text']
             appInfo.step += 1
         elif(appInfo.step == 2):
-            bot.send_message(message.chat.id, app_dic_txt.mobile_number_m)
-            bot.send_message(message.chat.id, app_dic_txt.mobile_guid_m)
             if check_phone_number(message.json['text']):
                 bot.send_message(message.chat.id, app_dic_txt.success_step_m)
                 appInfo.MOBILE_NUM = message.json['text']
                 appInfo.step += 1
+                bot.send_message(message.chat.id, text=app_dic_txt.edu_m, reply_markup=keyboard_edu)
             else:
-                bot.send_message(message.chat.id,app_dic_txt.mobile_number_inccorect_m)    
+                bot.send_message(message.chat.id, app_dic_txt.mobile_number_m)
+                bot.send_message(message.chat.id, app_dic_txt.mobile_guid_m)
+                # bot.send_message(message.chat.id,app_dic_txt.mobile_number_inccorect_m)    
         elif(appInfo.step == 3):
             bot.send_message(message.chat.id, app_dic_txt.success_step_m)
-            bot.send_message(message.chat.id, app_dic_txt.edu_m)
             appInfo.EDU_TEXT = message.json['text']
             appInfo.step += 1
+            bot.send_message(message.chat.id, text=app_dic_txt.field_m, reply_markup=keyboard_field)
         elif(appInfo.step == 4):
+            telebot.types.ReplyKeyboardRemove(selective=None)
             bot.send_message(message.chat.id, app_dic_txt.success_step_m)
-            bot.send_message(message.chat.id, app_dic_txt.field_m)
             appInfo.FIELD_TEXT = message.json['text']
             appInfo.step += 1
-        elif(appInfo.step == 5):
-            bot.send_message(message.chat.id, app_dic_txt.success_step_m)
             bot.send_message(message.chat.id, app_dic_txt.place_m)
+        elif(appInfo.step == 5):
+            telebot.types.ReplyKeyboardRemove(selective=None)
+            bot.send_message(message.chat.id, app_dic_txt.success_step_m)
             appInfo.PLACE_TEXT = message.json['text']
             appInfo.step += 1
         else:
